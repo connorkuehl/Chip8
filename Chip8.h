@@ -10,6 +10,9 @@
 
 #include <cstdint>
 
+const int START_PROG_MEM  = 0x200;
+const int END_PROG_MEM    = 0xFFF;
+
 class Chip8
 {
     public:
@@ -22,7 +25,7 @@ class Chip8
     private:
         uint16_t    opcode;
         uint16_t    I;              // Address Register
-        uint16_t    pc;             // Program Counter
+        uint16_t    pc;             // Program Counter, program space: 0x200 - 0xFFF
         uint16_t    sp;             // Stack Pointer
         uint16_t    stack[16];      // Program Stack
         uint8_t     V[16];          // Chip8 has 16 8-bit registers
