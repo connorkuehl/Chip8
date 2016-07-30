@@ -27,7 +27,7 @@ void Chip8::loadROM(const std::string& romFile)
         fin.close();
     }
     else
-        abortChip8("Failed to open " + romFile);
+        abortChip8("Failed to open \"" + romFile + "\"");
 }
 
 void Chip8::runCycle()
