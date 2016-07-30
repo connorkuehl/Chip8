@@ -6,18 +6,14 @@
  */
 
 #include "Chip8.h"
-
+#include "error.h"
 #include <fstream>
 
 Chip8::Chip8() : opcode(0), I(0), pc(START_PROG_MEM), sp(0), stack{0}, V{0}, memory{0}, pixels{0}, delayTimer(0), soundTimer(0), key{0}
 {}
 
-void Chip8::loadROM(const char* romFile)
+void Chip8::loadROM(const std::string& romFile)
 {
-    // TODO Add error checking and handling (abort functions, etc)
-    if (!romFile)
-        return;
-
     using std::ifstream;
 
     ifstream fin(romFile, std::ios::binary);
@@ -30,6 +26,8 @@ void Chip8::loadROM(const char* romFile)
             memory[i + START_PROG_MEM] = fin.get();
         fin.close();
     }
+    else
+        abortChip8("Failed to open " + romFile);
 }
 
 void Chip8::runCycle()

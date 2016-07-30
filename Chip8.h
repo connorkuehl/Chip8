@@ -9,7 +9,9 @@
 #define CHIP8_H_
 
 #include <cstdint>
+#include <string>
 
+const std::string PROG_NAME = "Chip8";
 const int START_PROG_MEM  = 0x200;
 const int END_PROG_MEM    = 0xFFF;
 
@@ -18,7 +20,7 @@ class Chip8
     public:
         Chip8();
 
-        void loadROM(const char*);  // Load a Chip8 ROM file into Program data memory space
+        void loadROM(const std::string&);  // Load a Chip8 ROM file into Program data memory space
         void runCycle();            // Fetch, decode, and execute opcode
         void draw();                // Draw to the screen
         void interact();            // Keyboard state and user input
