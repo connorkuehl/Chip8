@@ -60,6 +60,7 @@ class Chip8
         uint8_t     delayTimer;     // Refresh rate of the screen
         uint8_t     soundTimer;     // Play a sound after counting down from 60
         uint8_t     key[16];        // Key press, Chip8 keyboard is 0x0 - 0xF
+        bool        updatedPixels;  // Flag, if true we need to redraw the pixels
 };
 
 #endif

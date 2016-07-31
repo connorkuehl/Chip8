@@ -9,7 +9,7 @@
 #include "error.h"
 #include <fstream>
 
-Chip8::Chip8() : opcode(0), I(0), pc(START_PROG_MEM), sp(0), stack{0}, V{0}, memory{0}, pixels{0}, delayTimer(0), soundTimer(0), key{0}
+Chip8::Chip8() : opcode(0), I(0), pc(START_PROG_MEM), sp(0), stack{0}, V{0}, memory{0}, pixels{0}, delayTimer(0), soundTimer(0), key{0}, updatedPixels(false)
 {
     // load font set into memory
     for (int i = 0; i < 80; ++i)
@@ -31,7 +31,7 @@ void Chip8::loadROM(const std::string& romFile)
         for (int i = 0; !fin.eof() && (i + START_PROG_MEM < END_PROG_MEM); ++i)
             memory[i + START_PROG_MEM] = fin.get();
         /* TODO ROM too large
-        if (fin.get() != EOF)
+        if (fin.peek() != EOF)
             abortChip8("ROM is too large for program memory space.");
         */
         fin.close();
@@ -58,7 +58,11 @@ void Chip8::runCycle()
             {
                 // 0x0NNN - unused, this is a chip8 system call
                 // 0x00E0 - clears the screen
-                case 0x0000: // TODO
+                case 0x0000:
+                    for (int i = 0; i < 64*32; ++i)
+                        pixels[i] = 0;
+                    updatedPixels = true;
+                    pc += 2;
                     break;
                 // 0x00EE - RET from a function call
                 case 0x000E: 
@@ -206,7 +210,29 @@ void Chip8::runCycle()
         //          (VF is set to 1 if any screen pixels are flipped from set to unset when the
         //          sprite is drawn and 0 if that does not happen.
         case 0xD000:    // TODO
-            break;
+            {
+                uint16_t height = opcode & 0x000F;
+                uint16_t pixel;
+
+                V[0xF] = 0;
+                for (int row = 0; row < height; ++row)
+                {
+                    // load pixel
+                    pixel = memory[I] + row;
+                    for (int col = 0; col < 8; ++col)
+                    {
+                        if ((pixel & (0x80 >> col)) != 0)
+                        {
+                            if (pixels[REG_X + col + ((REG_Y + row) * 64)] == 1)
+                                V[0xF] = 1;
+                            pixels[REG_X + col + ((REG_Y + row) * 64)] ^= 1;
+                        }
+                    }
+                }
+                updatedPixels = true;
+                pc += 2;
+                break;
+            }
         /*
          * Special case: multiple opcodes start with 0xE as highest 4 bits
          */
@@ -214,10 +240,18 @@ void Chip8::runCycle()
             switch (opcode & 0x000F)
             {
                 // 0xEX9E - SKIP next instruction if key stored in VX is pressed
-                case 0x000E:    // TODO
+                case 0x000E: 
+                    if (key[REG_X] != 0)
+                        pc += 4;
+                    else
+                        pc += 2;
                     break;
                 // 0xEXA1 - SKIP next instruction if key stored in VX ISN'T pressed
-                case 0x0001:    // TODO
+                case 0x0001:
+                    if (key[REG_X] == 0)
+                        pc += 4;
+                    else
+                        pc += 2;
                     break;
                 default: // TODO error handling for bad opcode
                     break;
@@ -236,7 +270,21 @@ void Chip8::runCycle()
                     break;
                 // 0xFX0A - Wait for keypress, then store it in VX
                 case 0x000A:    // TODO
-                    break;
+                    {
+                        bool keyPressed = false;
+                        for (int i = 0; i < 16; ++i)
+                        {
+                            if (key[i] != 0)
+                            {
+                                REG_X = i;
+                                keyPressed = true;
+                            }
+                        }
+                        if (!keyPressed)
+                            return;
+                        pc += 2;
+                        break;
+                    }
                 // Sub special case: multiple opcodes ending with 0x
                 case 0x0005:
                     switch (opcode & 0x00F0)
@@ -276,9 +324,13 @@ void Chip8::runCycle()
                 case 0x0009:
                     break;
                 // 0xFX33 - Store decimal parts of VX - I = hundreds, I+1 = tens, I+2 = ones
-                case 0x0003:
+                case 0x0003:        // TODO revisit this one
+                    // The value in register X is at MOST 255 (0xFF)
+                    // Find out how many full 100s there are
                     int hundreds = REG_X / 100;
+                    // subtract the hundreds, find out how many full 10s there are
                     int tens = (REG_X - (100 * hundreds)) / 10;
+                    // the remainder is the ones
                     int ones = ((REG_X - (100 * hundreds)) - (10 * tens));
 
                     memory[I] = hundreds;
@@ -304,7 +356,10 @@ void Chip8::runCycle()
 }
 
 void Chip8::draw()
-{}
+{
+
+    updatedPixels = false;
+}
 
 void Chip8::interact()
 {}
