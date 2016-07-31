@@ -8,12 +8,15 @@
 #ifndef CHIP8_H_
 #define CHIP8_H_
 
-#include <cstdint>
 #include <string>
+#include <cstdint>
+#include <cstdlib>
 
-const std::string PROG_NAME = "Chip8";
-const int START_PROG_MEM  = 0x200;
-const int END_PROG_MEM    = 0xFFF;
+#define PROG_NAME  "Chip8"
+#define REG_X V[(opcode & 0x0F00) >> 8]
+#define REG_Y V[(opcode & 0x00F0) >> 4]
+#define START_PROG_MEM   0x200
+#define END_PROG_MEM     0xFFF
 
 class Chip8
 {
