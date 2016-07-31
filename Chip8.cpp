@@ -11,6 +11,10 @@
 
 Chip8::Chip8() : opcode(0), I(0), pc(START_PROG_MEM), sp(0), stack{0}, V{0}, memory{0}, pixels{0}, delayTimer(0), soundTimer(0), key{0}
 {
+    // load font set into memory
+    for (int i = 0; i < 80; ++i)
+        memory[i] = chip8Font[i];
+
     std::srand(0);
 }
 
@@ -26,6 +30,10 @@ void Chip8::loadROM(const std::string& romFile)
         fin.peek();
         for (int i = 0; !fin.eof() && (i + START_PROG_MEM < END_PROG_MEM); ++i)
             memory[i + START_PROG_MEM] = fin.get();
+        /* TODO ROM too large
+        if (fin.get() != EOF)
+            abortChip8("ROM is too large for program memory space.");
+        */
         fin.close();
     }
     else
@@ -50,7 +58,7 @@ void Chip8::runCycle()
             {
                 // 0x0NNN - unused, this is a chip8 system call
                 // 0x00E0 - clears the screen
-                case 0x0000: 
+                case 0x0000: // TODO
                     break;
                 // 0x00EE - RET from a function call
                 case 0x000E: 
@@ -169,7 +177,7 @@ void Chip8::runCycle()
                     REG_X = REG_X << 1;
                     pc += 2;
                     break;
-                default: //TODO error handle bad opcode
+                default: // TODO error handle bad opcode
                     break;
             }
             break;
@@ -197,7 +205,7 @@ void Chip8::runCycle()
         // 0xDXYN - Draw sprite at coord (VX, VY) with a width of 8 pixels and height of N pixels
         //          (VF is set to 1 if any screen pixels are flipped from set to unset when the
         //          sprite is drawn and 0 if that does not happen.
-        case 0xD000:
+        case 0xD000:    // TODO
             break;
         /*
          * Special case: multiple opcodes start with 0xE as highest 4 bits
@@ -206,10 +214,10 @@ void Chip8::runCycle()
             switch (opcode & 0x000F)
             {
                 // 0xEX9E - SKIP next instruction if key stored in VX is pressed
-                case 0x000E:
+                case 0x000E:    // TODO
                     break;
                 // 0xEXA1 - SKIP next instruction if key stored in VX ISN'T pressed
-                case 0x0001:
+                case 0x0001:    // TODO
                     break;
                 default: // TODO error handling for bad opcode
                     break;
@@ -227,7 +235,7 @@ void Chip8::runCycle()
                     pc += 2;
                     break;
                 // 0xFX0A - Wait for keypress, then store it in VX
-                case 0x000A:
+                case 0x000A:    // TODO
                     break;
                 // Sub special case: multiple opcodes ending with 0x
                 case 0x0005:
@@ -240,9 +248,15 @@ void Chip8::runCycle()
                             break;
                         // 0xFX55 - Stores V0 through VX in memory starting at address I
                         case 0x0050:
-                            break;
-                        // 0xFX65 - Fills V0 through VX with vaues in memory starting at addr I
+                            for (int i = 0; i <= REG_X; ++i)
+                                memory[I + i] = V[i];   // maybe I should change `i` to `k`
+                            pc += 2;
+                            break; 
+                        // 0xFX65 - Fills V0 through VX with values in memory starting at addr I
                         case 0x0060:
+                            for (int i = 0; i <= REG_X; ++i)
+                                V[i] = memory[I + i];
+                            pc += 2;
                             break;
                         default: // TODO error handling for bad opcode
                             break;
