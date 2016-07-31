@@ -9,7 +9,6 @@
 #include "error.h"
 #include <fstream>
 #include <iostream>
-#include <iomanip>
 
 Chip8::Chip8() : opcode(0), I(0), pc(START_PROG_MEM), sp(0), stack{0}, V{0}, memory{0}, pixels{0}, delayTimer(0), soundTimer(0), key{0}, updatedPixels(true), running(true), window(nullptr), renderer(nullptr), pixelTex(nullptr)
 {
@@ -45,10 +44,9 @@ void Chip8::loadROM(const std::string& romFile)
         fin.peek();
         for (int i = 0; !fin.eof() && (i + START_PROG_MEM < END_PROG_MEM); ++i)
             memory[i + START_PROG_MEM] = fin.get();
-        /* TODO ROM too large
-           if (fin.peek() != EOF)
+
+        if (fin.peek() != EOF)
            abortChip8("ROM is too large for program memory space.");
-           */
         fin.close();
     }
     else
@@ -74,11 +72,11 @@ void Chip8::initVideo()
     if (!renderer)
         abortChip8(std::string("SDL2 failed to create renderer. . . ") + SDL_GetError());
     SDL_RenderSetScale(renderer, SCALE, SCALE);
-    SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
 }
 
 void Chip8::play()
 {
+    std::cout << "PC =    ";
     while (running)
     {
         runCycle();
@@ -86,15 +84,16 @@ void Chip8::play()
             draw();
         interact();
 
-        std::cout << "PC = " << pc << std::endl;
+        std::cout << "\b\b\b" << pc;
     }
+    std::cout << std::endl;
 }
 
 
 void Chip8::runCycle()
 {
-    if (pc > END_PROG_MEM)
-        abortChip8("Program counter exceeds program memory space.");
+    if (pc > END_PROG_MEM || pc < START_PROG_MEM)
+        abortChip8("Seg fault!");
     // Load the two byte quantity for decoding
     opcode = memory[pc] << 8 | memory[pc + 1];
 
@@ -122,7 +121,7 @@ void Chip8::runCycle()
                     pc = stack[sp--];
                     break;
                 default:
-                    printChip8Error("This emulator does not support the SYS call opcode.");
+                    printChip8Error("RCA 1802 system call is not supported. :(");
                     pc += 2;
                     break;
             }
@@ -231,7 +230,9 @@ void Chip8::runCycle()
                     VX = VX << 1;
                     pc += 2;
                     break;
-                default: // TODO error handle bad opcode
+                default:
+                    printChip8Error("Encountered unknown (mangled?) opcode for 0x8. Skipping.");
+                    pc += 2;
                     break;
             }
             break;
@@ -258,7 +259,7 @@ void Chip8::runCycle()
             // 0xDXYN - Draw sprite at coord (VX, VY) with a width of 8 pixels and height of N pixels
             //          (VF is set to 1 if any screen pixels are flipped from set to unset when the
             //          sprite is drawn and 0 if that does not happen.
-        case 0xD000:    // TODO
+        case 0xD000:    // TODO is this ok??
             {
                 uint16_t height = opcode & 0x000F;
                 uint16_t pixel;
@@ -300,7 +301,9 @@ void Chip8::runCycle()
                         pc += 2;
                     pc += 2;
                     break;
-                default: // TODO error handling for bad opcode
+                default:
+                    printChip8Error("Encountered unknown (mangled?) opcode for 0xE. Skipping.");
+                    pc += 2;
                     break;
             }
             break;
@@ -316,7 +319,7 @@ void Chip8::runCycle()
                     pc += 2;
                     break;
                     // 0xFX0A - Wait for keypress, then store it in VX
-                case 0x000A:    // TODO
+                case 0x000A:  
                     {
                         bool keyPressed = false;
                         for (int i = 0; i < 16; ++i)
@@ -353,7 +356,9 @@ void Chip8::runCycle()
                                 V[i] = memory[I + i];
                             pc += 2;
                             break;
-                        default: // TODO error handling for bad opcode
+                        default: 
+                            printChip8Error("Encountered unknown (mangled?) opcode for 0xF. Skipping.");
+                            pc += 2;
                             break;
                     }
                     break;
@@ -373,7 +378,7 @@ void Chip8::runCycle()
                     pc += 2;
                     break;
                     // 0xFX33 - Store decimal parts of VX - I = hundreds, I+1 = tens, I+2 = ones
-                case 0x0003:        // TODO revisit this one
+                case 0x0003:    
                     // The value in register X is at MOST 255 (0xFF)
                     // Find out how many full 100s there are
                     int hundreds = VX / 100;
@@ -389,7 +394,9 @@ void Chip8::runCycle()
                     break;
             }
             break;
-        default: // TODO error handling for bad opcode
+        default:
+                printChip8Error("Unknown Opcode. Skipping.");
+                pc += 2;
             break;
     }
 
