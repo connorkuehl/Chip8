@@ -9,13 +9,19 @@
 #include "error.h"
 #include <fstream>
 
-Chip8::Chip8() : opcode(0), I(0), pc(START_PROG_MEM), sp(0), stack{0}, V{0}, memory{0}, pixels{0}, delayTimer(0), soundTimer(0), key{0}, updatedPixels(false)
+Chip8::Chip8() : opcode(0), I(0), pc(START_PROG_MEM), sp(0), stack{0}, V{0}, memory{0}, pixels{0}, delayTimer(0), soundTimer(0), key{0}, updatedPixels(true), running(true)
 {
     // load font set into memory
     for (int i = 0; i < 80; ++i)
         memory[i] = chip8Font[i];
 
     std::srand(0);
+}
+
+Chip8::~Chip8()
+{
+
+    SDL_Quit();
 }
 
 void Chip8::loadROM(const std::string& romFile)
@@ -39,6 +45,10 @@ void Chip8::loadROM(const std::string& romFile)
     else
         abortChip8("Failed to open \"" + romFile + "\"");
 }
+
+void Chip8::play()
+{}
+
 
 void Chip8::runCycle()
 {
@@ -362,4 +372,55 @@ void Chip8::draw()
 }
 
 void Chip8::interact()
-{}
+{
+    SDL_Event event;
+
+    while (SDL_PollEvent(&event) != 0)
+    {
+        switch (event.type)
+        {
+            case SDL_QUIT:
+                running = false;
+                break;
+            case SDL_KEYDOWN:
+                {
+                    switch (event.key.keysym.sym)
+                    {
+                        case SDLK_1: key[0x1] = 1;
+                                     break;
+                        case SDLK_2: key[0x2] = 1;
+                                     break;
+                        case SDLK_3: key[0x3] = 1;
+                                     break;
+                        case SDLK_4: key[0xC] = 1;
+                                     break;
+                        case SDLK_q: key[0x4] = 1;
+                                     break;
+                        case SDLK_w: key[0x5] = 1;
+                                     break;
+                        case SDLK_e: key[0x6] = 1;
+                                     break;
+                        case SDLK_r: key[0xD] = 1;
+                                     break;
+                        case SDLK_a: key[0x7] = 1;
+                                     break;
+                        case SDLK_s: key[0x8] = 1;
+                                     break;
+                        case SDLK_d: key[0x9] = 1;
+                                     break;
+                        case SDLK_f: key[0xE] = 1;
+                                     break;
+                        case SDLK_z: key[0xA] = 1;
+                                     break;
+                        case SDLK_x: key[0x0] = 1;
+                                     break;
+                        case SDLK_c: key[0xB] = 1;
+                                     break;
+                        case SDLK_v: key[0xF] = 1;
+                                     break;
+                    }
+                    break;
+                }
+        }
+    }
+}
