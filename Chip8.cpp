@@ -10,7 +10,7 @@
 #include <fstream>
 #include <iostream>
 
-Chip8::Chip8() : opcode(0), I(0), pc(START_PROG_MEM), sp(0), stack{0}, V{0}, memory{0}, pixels{0}, delayTimer(0), soundTimer(0), key{0}, updatedPixels(true), running(true), window(nullptr), renderer(nullptr), pixelTex(nullptr)
+Chip8::Chip8() : opcode(0), I(0), pc(START_PROG_MEM), sp(0), stack{0}, V{0}, memory{0}, pixels{0}, delayTimer(0), soundTimer(0), key{0}, updatedPixels(true), running(true), window(nullptr), renderer(nullptr)
 {
     // load font set into memory
     for (int i = 0; i < 80; ++i)
@@ -21,8 +21,6 @@ Chip8::Chip8() : opcode(0), I(0), pc(START_PROG_MEM), sp(0), stack{0}, V{0}, mem
 
 Chip8::~Chip8()
 {
-    if (pixelTex)
-        SDL_DestroyTexture(pixelTex);
     if (renderer)
         SDL_DestroyRenderer(renderer);
     if (window)

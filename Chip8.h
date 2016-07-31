@@ -73,7 +73,6 @@ class Chip8
         /* GRAPHICS */
         SDL_Window* window;               // To display a window
         SDL_Renderer* renderer;           // To render color and the texture that holds pixels
-        SDL_Texture* pixelTex;            // To map our pixels to
 };
 
 #endif
