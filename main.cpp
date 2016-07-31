@@ -8,6 +8,7 @@ int main(int argc, char* argv[])
 
     Chip8 chip8;
     chip8.loadROM(argv[1]);
+    chip8.play();
 
     return 0;
 }
