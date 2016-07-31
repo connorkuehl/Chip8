@@ -4,5 +4,6 @@
 #include <string>
 
 void abortChip8(const std::string&);
+void printChip8Error(const std::string&);
 
 #endif

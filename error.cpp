@@ -5,7 +5,13 @@
 void abortChip8(const std::string& msg)
 {
     using std::cerr;
-
-    cerr << PROG_NAME << " ERROR: " << msg << "\nExiting.\n"; 
+    printChip8Error(msg);
+    cerr << "\nExiting.\n"; 
     exit(-1);
+}
+
+void printChip8Error(const std::string& msg)
+{
+    using std::cerr;
+    cerr << PROG_NAME << " ERROR: " << msg << ".\n";
 }
