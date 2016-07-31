@@ -14,12 +14,12 @@
 #include <cstdlib>
 
 #define PROG_NAME  "Chip8"
-#define REG_X V[(opcode & 0x0F00) >> 8]
-#define REG_Y V[(opcode & 0x00F0) >> 4]
+#define VX V[(opcode & 0x0F00) >> 8]
+#define VY V[(opcode & 0x00F0) >> 4]
 static const int START_PROG_MEM = 0x200;
 static const int END_PROG_MEM   = 0xFFF;
-static const int X_RES          = 32;
-static const int Y_RES          = 64;
+static const int X_RES          = 64;
+static const int Y_RES          = 32;
 static const int SCALE          = 10;
 
 static uint8_t chip8Font[80] =
@@ -48,26 +48,32 @@ class Chip8
         Chip8();
         ~Chip8();
 
-        void loadROM(const std::string&);  // Load a Chip8 ROM file into Program data memory space
-        void play();                // The 'run' loop. 
+        void loadROM(const std::string&); // Load a Chip8 ROM file into Program data memory space
+        void play();                      // The 'run' loop. 
     private:
-        void runCycle();            // Fetch, decode, and execute opcode
-        void draw();                // Draw to the screen
-        void interact();            // Keyboard state and user input
+        void initVideo();                 // Set up SDL2 systems
+        void runCycle();                  // Fetch, decode, and execute opcode
+        void draw();                      // Draw to the screen
+        void interact();                  // Keyboard state and user input
 
         uint16_t    opcode;
-        uint16_t    I;              // Address Register
-        uint16_t    pc;             // Program Counter, program space: 0x200 - 0xFFF
-        uint16_t    sp;             // Stack Pointer
-        uint16_t    stack[16];      // Program Stack
-        uint8_t     V[16];          // Chip8 has 16 8-bit registers
-        uint8_t     memory[4096];   // RAM
-        uint8_t     pixels[64*32];  // Makes up the drawable screen
-        uint8_t     delayTimer;     // Refresh rate of the screen
-        uint8_t     soundTimer;     // Play a sound after counting down from 60
-        uint8_t     key[16];        // Key press, Chip8 keyboard is 0x0 - 0xF
-        bool        updatedPixels;  // Flag, if true we need to redraw the pixels
-        bool        running;        // Used to determine if the machine is on and running
+        uint16_t    I;                    // Address Register
+        uint16_t    pc;                   // Program Counter, program space: 0x200 - 0xFFF
+        uint16_t    sp;                   // Stack Pointer
+        uint16_t    stack[16];            // Program Stack
+        uint8_t     V[16];                // Chip8 has 16 8-bit registers
+        uint8_t     memory[4096];         // RAM
+        uint8_t     pixels[X_RES*Y_RES];  // Makes up the drawable screen
+        uint8_t     delayTimer;           // Refresh rate of the screen
+        uint8_t     soundTimer;           // Play a sound after counting down from 60
+        uint8_t     key[16];              // Key press, Chip8 keyboard is 0x0 - 0xF
+        bool        updatedPixels;        // Flag, if true we need to redraw the pixels
+        bool        running;              // Used to determine if the machine is on and running
+        std::string currentROM;
+        /* GRAPHICS */
+        SDL_Window* window;               // To display a window
+        SDL_Renderer* renderer;           // To render color and the texture that holds pixels
+        SDL_Texture* pixelTex;            // To map our pixels to
 };
 
 #endif
