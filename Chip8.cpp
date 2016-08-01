@@ -286,7 +286,7 @@ void Chip8::runCycle()
                         {
                             if (pixels[(VX + col + ((VY + row) * X_RES))] == 1)
                                 V[0xF] = 1;
-                            pixels[VX + col + ((VY + row) * 64)] ^= 1;
+                            pixels[VX + col + ((VY + row) * X_RES)] ^= 1;
                         }
                     }
                 }
@@ -374,6 +374,7 @@ void Chip8::runCycle()
                 // 0xFX33 - Store decimal parts of VX - I = hundreds, I+1 = tens, I+2 = ones
                 case 0x0033:    
                     {
+                        /*
                         // The value in register X is at MOST 255 (0xFF)
                         // Find out how many full 100s there are
                         int hundreds = VX / 100;
@@ -385,18 +386,22 @@ void Chip8::runCycle()
                         memory[I] = hundreds;
                         memory[I + 1] = tens;
                         memory[I + 2] = ones;
+                        */
+                        memory[I] = VX / 100;
+                        memory[I + 1] = (VX / 10) % 10;
+                        memory[I + 2] = (VX % 100) % 10;
                         pc += 2;
                         break;
                     }
                     // 0xFX55 - Stores V0 through VX in memory starting at address I
                     case 0x0055:
-                        for (int i = 0; i <= VX; ++i)
+                        for (int i = 0; i <= ((opcode & 0x0F00) >> 8); ++i)
                             memory[I + i] = V[i];   // maybe I should change `i` to `k`
                         pc += 2;
                         break; 
                     // 0xFX65 - Fills V0 through VX with values in memory starting at addr I
                     case 0x0065:
-                        for (int i = 0; i <= VX; ++i)
+                        for (int i = 0; i <= ((opcode & 0x0F00) >> 8); ++i)
                             V[i] = memory[I + i];
                         pc += 2;
                         break;
