@@ -1,8 +1,16 @@
 #Chip8++
-##A Chip8 Emulator written in C++ using SDL2.
+*A Chip8 Emulator/Interpreter written in C++ using the SDL2 library.*
 
-###Dependencies (Look here before you download!)
-- A C++ compiler (clang++, g++), the Makefile will default to clang.
+![Space Invaders](https://raw.github.com/connorkuehl/Chip8/screenshots/space_invaders.gif)
+
+####About This Project
+
+
+####Dependencies (Look here before you download!)
+- A C++ compiler (clang++, g++, minGW), the Makefile will default to clang.
 - SDL2 development headers. (libsdl2-dev)
 
-#Check back later, I'll finish writing this README soon.
+####Getting Started
+1. Clone this git repo or download the .zip (don't forget to unzip it)
+2. Run `make` in the top-level directory which contains the Makefile
+3. Play some games `./chip8 rom/BRIX`
