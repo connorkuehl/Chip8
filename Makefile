@@ -1,6 +1,7 @@
 CC = clang++
 CXXFLAGS= -std=c++11 -c
 LINKER = $(CC) -std=c++11
+LDFLAGS = -lSDL2
 OBJECTS = main.o Chip8.o error.o
 EXECUTABLE = chip8
 
@@ -10,16 +11,16 @@ debug: CXXFLAGS += -g -Wall
 debug: $(EXECUTABLE)
 
 $(EXECUTABLE): $(OBJECTS)
-	$(LINKER) $(OBJECTS) -o	$(EXECUTABLE)
+	$(LINKER) $(OBJECTS) $(LDFLAGS) -o	$(EXECUTABLE)
 
 main.o: main.cpp
-	$(CC) $(CXXFLAGS)	main.cpp
+	$(CC) $(CXXFLAGS) $(LDFLAGS)	main.cpp
 
 Chip8.o: Chip8.cpp Chip8.h
-	$(CC) $(CXXFLAGS)	Chip8.cpp
+	$(CC) $(CXXFLAGS) $(LDFLAGS)	Chip8.cpp
 
 error.o: error.cpp error.h
-	$(CC) $(CXXFLAGS)	error.cpp
+	$(CC) $(CXXFLAGS) $(LDFLAGS)	error.cpp
 
 clean:
 	rm -f $(OBJECTS)
