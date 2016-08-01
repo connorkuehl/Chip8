@@ -16,11 +16,15 @@
 #define PROG_NAME  "Chip8"
 #define VX V[(opcode & 0x0F00) >> 8]
 #define VY V[(opcode & 0x00F0) >> 4]
-static const int START_PROG_MEM = 0x200;
-static const int END_PROG_MEM   = 0xFFF;
-static const int X_RES          = 64;
-static const int Y_RES          = 32;
-static const int SCALE          = 10;
+#define NNN (opcode & 0x0FFF)
+#define KK (opcode & 0x00FF)
+
+static const int   START_PROG_MEM = 0x200;
+static const int   END_PROG_MEM   = 0xFFF;
+static const int   X_RES          = 64;
+static const int   Y_RES          = 32;
+static const int   SCALE          = 10;
+static const float REFRESH_RATE   = 1.f/60.f;
 
 static uint8_t chip8Font[80] =
 { 
@@ -59,7 +63,7 @@ class Chip8
         uint16_t    opcode;
         uint16_t    I;                    // Address Register
         uint16_t    pc;                   // Program Counter, program space: 0x200 - 0xFFF
-        uint16_t    sp;                   // Stack Pointer
+        uint8_t     sp;                   // Stack Pointer
         uint16_t    stack[16];            // Program Stack
         uint8_t     V[16];                // Chip8 has 16 8-bit registers
         uint8_t     memory[4096];         // RAM
