@@ -75,12 +75,19 @@ void Chip8::initVideo()
 void Chip8::play()
 {
     std::cout << "PC =    ";
+    uint32_t lastUpdate = 0, currentTime;
     while (running)
     {
-        runCycle();
+        currentTime = SDL_GetTicks();
+
+        // Only cycle 60 times per second
+        if (((currentTime - lastUpdate) / 1000) <= REFRESH_RATE)
+            runCycle();
         if (updatedPixels)
             draw();
         interact();
+
+        lastUpdate = currentTime;
 
         std::cout << "\b\b\b" << pc;
     }
@@ -100,8 +107,8 @@ void Chip8::runCycle()
     {
         /*
          * Special case: three opcodes start with 0x0 as highest 4 bits, but are distinguishible
-         *               by the last 4 bits (i.e, 0NNN (syscall), 00E0(clear screen), 00EE(ret)
-         *                                           ^               ^                   ^
+         *               by the last byte (i.e, 0NNN (syscall), 00E0(clear screen), 00EE(ret)
+         *                                        ^^              ^^                  ^^
          */
         case 0x0000:
             switch (opcode & 0x00FF)
@@ -121,6 +128,7 @@ void Chip8::runCycle()
                     // 0x00EE - RET from a function call
                 case 0x00EE: 
                     pc = stack[sp--];
+                    pc += 2;
                     break;
                 default:
                     printChip8Error("Encountered unknown (mangled?) opcode for 0x0. Skipping.");
@@ -130,22 +138,22 @@ void Chip8::runCycle()
             break;
             // 0x1NNN - JMP to address at address `NNN`
         case 0x1000:
-            pc = opcode & 0x0FFF;
+            pc = NNN;
             break;
             // 0x2NNN - CALL subroutine at address `NNN`
         case 0x2000:
             stack[++sp] = pc;
-            pc = opcode & 0x0FFF;
+            pc = NNN;
             break;
-            // 0x3XNN - SKIP next instruction if VX == `NN`
+            // 0x3XKK - SKIP next instruction if VX == `KK`
         case 0x3000:
-            if (VX == (opcode & 0x00FF))
+            if (VX == KK)
                 pc += 2;
             pc += 2;
             break;
-            // 0x4XNN - SKIP next instruction if VX != `NN`
+            // 0x4XKK - SKIP next instruction if VX != `KK`
         case 0x4000:
-            if (VX != (opcode & 0x00FF))
+            if (VX != KK)
                 pc += 2;
             pc += 2;
             break;
@@ -155,14 +163,14 @@ void Chip8::runCycle()
                 pc += 2;
             pc += 2;
             break;
-            // 0x6XNN - SET VX = `NN`
+            // 0x6XKK - SET VX = `KK`
         case 0x6000:
-            VX = opcode & 0x00FF;
+            VX = KK;
             pc += 2;
             break;
-            // 0x7XNN - SET VX += `NN`
+            // 0x7XKK - SET VX += `KK`
         case 0x7000:
-            VX += opcode & 0x00FF;
+            VX += KK;
             pc += 2;
             break;
             /*
@@ -193,20 +201,23 @@ void Chip8::runCycle()
                     break;
                     // 0x8XY4 - SET VX += VY (VF is set to 1 if there's a carry, 0 if not)
                 case 0x0004:
-                    if (VY > 0xFF - VX)
-                        V[0xF] = 1;
-                    else
-                        V[0xF] = 0;
+                    {
+                        if (VY > 0xFF - VX)
+                            V[0xF] = 1;
+                        else
+                            V[0xF] = 0;
 
-                    VX += VY;
-                    pc += 2;
-                    break;
+                        uint16_t temp = VX + VY;
+                        VX = temp & 0x00FF;
+                        pc += 2;
+                        break;
+                    }
                     // 0x8XY5 - SET VX -= VY (VF is set to 0 if there's a borrow, 1 if not)
                 case 0x0005:
-                    if (VY > VX)
-                        V[0xF] = 0;
-                    else
+                    if (VX > VY)
                         V[0xF] = 1;
+                    else
+                        V[0xF] = 0;
 
                     VX -= VY;
                     pc += 2;
@@ -219,10 +230,10 @@ void Chip8::runCycle()
                     break;
                     // 0x8XY7 - SET VX = VY - VX (VF is set to 0 if there's a borrow, 1 if not)
                 case 0x0007:
-                    if (VX > VY)
-                        V[0xF] = 0;
-                    else
+                    if (VY > VX)
                         V[0xF] = 1;
+                    else
+                        V[0xF] = 0;
                     VX = VY - VX;
                     pc += 2;
                     break;
@@ -246,22 +257,20 @@ void Chip8::runCycle()
             break;
             // 0xANNN - SET I = `NNN`
         case 0xA000:
-            I = opcode & 0x0FFF;
+            I = NNN;
             pc += 2;
             break;
             // 0xBNNN - JMP to address `NNN` + V0
         case 0xB000:
-            pc = (opcode & 0x0FFF) + V[0];
+            pc = NNN + V[0];
             break;
-            // 0xCXNN - SET VX = randomNum & NN
+            // 0xCXKK - SET VX = randomNum & KK
         case 0xC000:
-            VX = (std::rand() % 0xFF) & (opcode & 0x00FF);
+            VX = (std::rand() % 0xFF) & KK;
             pc += 2;
             break;
-            // 0xDXYN - Draw sprite at coord (VX, VY) with a width of 8 pixels and height of N pixels
-            //          (VF is set to 1 if any screen pixels are flipped from set to unset when the
-            //          sprite is drawn and 0 if that does not happen.
-        case 0xD000:    // TODO is this ok??
+            // 0xDXYN - DRW
+        case 0xD000:
             {
                 uint16_t height = opcode & 0x000F;
                 uint16_t pixel;
@@ -289,16 +298,16 @@ void Chip8::runCycle()
              * Special case: multiple opcodes start with 0xE as highest 4 bits
              */
         case 0xE000:
-            switch (opcode & 0x000F)
+            switch (opcode & 0x00FF)
             {
                 // 0xEX9E - SKIP next instruction if key stored in VX is pressed
-                case 0x000E: 
+                case 0x009E: 
                     if (key[VX] != 0)
                         pc += 2;
                     pc += 2;
                     break;
                     // 0xEXA1 - SKIP next instruction if key stored in VX ISN'T pressed
-                case 0x0001:
+                case 0x00A1:
                     if (key[VX] == 0)
                         pc += 2;
                     pc += 2;
