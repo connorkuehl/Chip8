@@ -44,7 +44,7 @@ void Chip8::loadROM(const std::string& romFile)
             memory[i + START_PROG_MEM] = fin.get();
 
         if (fin.peek() != EOF)
-           abortChip8("ROM is too large for program memory space.");
+            abortChip8("ROM is too large for program memory space.");
         fin.close();
     }
     else
@@ -104,22 +104,26 @@ void Chip8::runCycle()
          *                                           ^               ^                   ^
          */
         case 0x0000:
-            switch (opcode & 0x000F)
+            switch (opcode & 0x00FF)
             {
                 // 0x0NNN - unused, this is a chip8 system call
-                // 0x00E0 - clears the screen
                 case 0x0000:
-                    for (int i = 0; i < (X_RES*Y_RES); ++i)
+                    printChip8Error("RCA 1802 system call is not supported. :(");
+                    pc += 2;
+                    break;
+                // 0x00E0 - clears the screen
+                case 0x00E0:
+                    for (int i = 0; i < (X_RES * Y_RES); ++i)
                         pixels[i] = 0;
                     updatedPixels = true;
                     pc += 2;
                     break;
                     // 0x00EE - RET from a function call
-                case 0x000E: 
+                case 0x00EE: 
                     pc = stack[sp--];
                     break;
                 default:
-                    printChip8Error("RCA 1802 system call is not supported. :(");
+                    printChip8Error("Encountered unknown (mangled?) opcode for 0x0. Skipping.");
                     pc += 2;
                     break;
             }
@@ -174,17 +178,17 @@ void Chip8::runCycle()
                     break;
                     // 0x8XY1 - SET VX = VX | VY
                 case 0x0001:
-                    VX = VX | VY;
+                    VX |= VY;
                     pc += 2;
                     break;
                     // 0x8XY2 - SET VX = VX & VY
                 case 0x0002:
-                    VX = VX & VY;
+                    VX &= VY;
                     pc += 2;
                     break;
                     // 0x8XY3 - SET VX = VX ^ VY
                 case 0x0003:
-                    VX = VX ^ VY;
+                    VX ^= VY;
                     pc += 2;
                     break;
                     // 0x8XY4 - SET VX += VY (VF is set to 1 if there's a carry, 0 if not)
@@ -199,7 +203,7 @@ void Chip8::runCycle()
                     break;
                     // 0x8XY5 - SET VX -= VY (VF is set to 0 if there's a borrow, 1 if not)
                 case 0x0005:
-                    if (VX > VY)
+                    if (VY > VX)
                         V[0xF] = 0;
                     else
                         V[0xF] = 1;
@@ -209,13 +213,13 @@ void Chip8::runCycle()
                     break;
                     // 0x8XY6 - SET VX = VX >> 1 (VF is LSB of VX prior to shift)
                 case 0x0006:
-                    V[0xF] = opcode & 0x0001;
-                    VX = VX >> 1;
+                    V[0xF] = VX & 0x1;
+                    VX >>= 1;
                     pc += 2;
                     break;
                     // 0x8XY7 - SET VX = VY - VX (VF is set to 0 if there's a borrow, 1 if not)
                 case 0x0007:
-                    if (VY > VX)
+                    if (VX > VY)
                         V[0xF] = 0;
                     else
                         V[0xF] = 1;
@@ -224,8 +228,8 @@ void Chip8::runCycle()
                     break;
                     // 0x8XYE - SET VX = VX << 1 (VF is MSB of VX prior to shift)
                 case 0x000E:
-                    V[0xF] = opcode & 0x0001;
-                    VX = VX << 1;
+                    V[0xF] = VX >> 7;
+                    VX <<= 1;
                     pc += 2;
                     break;
                 default:
@@ -263,11 +267,11 @@ void Chip8::runCycle()
                 uint16_t pixel;
 
                 V[0xF] = 0;
-                for (int row = 0; row < height; ++row)
+                for (uint8_t row = 0; row < height; ++row)
                 {
                     // load pixel
                     pixel = memory[I + row];
-                    for (int col = 0; col < 8; ++col)
+                    for (uint8_t col = 0; col < 8; ++col)
                     {
                         if ((pixel & (0x80 >> col)) != 0)
                         {
@@ -309,7 +313,7 @@ void Chip8::runCycle()
              * Special case: multiple opcodes start with 0xF as highest 4 bits
              */
         case 0xF000:
-            switch (opcode & 0x000F)
+            switch (opcode & 0x00FF)
             {
                 // 0xFX07 - SET VX = delayTimer
                 case 0x0007:
@@ -324,7 +328,7 @@ void Chip8::runCycle()
                         {
                             if (key[i] != 0)
                             {
-                                VX = key[i];
+                                VX = i;
                                 keyPressed = true;
                             }
                         }
@@ -333,68 +337,65 @@ void Chip8::runCycle()
                         pc += 2;
                         break;
                     }
-                    // Sub special case: multiple opcodes ending with 0x
-                case 0x0005:
-                    switch (opcode & 0x00F0)
-                    {
-                        // 0xFX15 - SET delay timer to VX
-                        case 0x0010:
-                            delayTimer = VX;
-                            pc += 2;
-                            break;
-                            // 0xFX55 - Stores V0 through VX in memory starting at address I
-                        case 0x0050:
-                            for (int i = 0; i <= VX; ++i)
-                                memory[I + i] = V[i];   // maybe I should change `i` to `k`
-                            pc += 2;
-                            break; 
-                            // 0xFX65 - Fills V0 through VX with values in memory starting at addr I
-                        case 0x0060:
-                            for (int i = 0; i <= VX; ++i)
-                                V[i] = memory[I + i];
-                            pc += 2;
-                            break;
-                        default: 
-                            printChip8Error("Encountered unknown (mangled?) opcode for 0xF. Skipping.");
-                            pc += 2;
-                            break;
-                    }
+                // 0xFX15 - SET delay timer to VX
+                case 0x0015:
+                    delayTimer = VX;
+                    pc += 2;
                     break;
-                    // 0xFX18 - SET sound timer to VX
-                case 0x0008:
+                // 0xFX18 - SET sound timer to VX
+                case 0x0018:
                     soundTimer = VX;
                     pc += 2;
                     break;
-                    // 0xFX1E - SET I += VX
-                case 0x000E:
+                // 0xFX1E - SET I += VX
+                case 0x001E:
+                    if (I + VX > 0x0FFF)
+                        V[0xF] = 1;
+                    else
+                        V[0xF] = 0;
+
                     I += VX;
                     pc += 2;
                     break;
-                    // 0xFX29 - SET I to location of sprite in VX, 0-F in hex are a 4x5 font
-                case 0x0009:
-                    I = VX;
+                // 0xFX29 - SET I to location of sprite in VX, 0-F in hex are a 4x5 font
+                case 0x0029:
+                    I = VX * 0x5;
                     pc += 2;
                     break;
-                    // 0xFX33 - Store decimal parts of VX - I = hundreds, I+1 = tens, I+2 = ones
-                case 0x0003:    
-                    // The value in register X is at MOST 255 (0xFF)
-                    // Find out how many full 100s there are
-                    int hundreds = VX / 100;
-                    // subtract the hundreds, find out how many full 10s there are
-                    int tens = (VX - (100 * hundreds)) / 10;
-                    // the remainder is the ones
-                    int ones = ((VX - (100 * hundreds)) - (10 * tens));
+                // 0xFX33 - Store decimal parts of VX - I = hundreds, I+1 = tens, I+2 = ones
+                case 0x0033:    
+                    {
+                        // The value in register X is at MOST 255 (0xFF)
+                        // Find out how many full 100s there are
+                        int hundreds = VX / 100;
+                        // subtract the hundreds, find out how many full 10s there are
+                        int tens = (VX - (100 * hundreds)) / 10;
+                        // the remainder is the ones
+                        int ones = ((VX - (100 * hundreds)) - (10 * tens));
 
-                    memory[I] = hundreds;
-                    memory[I + 1] = tens;
-                    memory[I + 2] = ones;
-                    pc += 2;
-                    break;
+                        memory[I] = hundreds;
+                        memory[I + 1] = tens;
+                        memory[I + 2] = ones;
+                        pc += 2;
+                        break;
+                    }
+                    // 0xFX55 - Stores V0 through VX in memory starting at address I
+                    case 0x0055:
+                        for (int i = 0; i <= VX; ++i)
+                            memory[I + i] = V[i];   // maybe I should change `i` to `k`
+                        pc += 2;
+                        break; 
+                    // 0xFX65 - Fills V0 through VX with values in memory starting at addr I
+                    case 0x0065:
+                        for (int i = 0; i <= VX; ++i)
+                            V[i] = memory[I + i];
+                        pc += 2;
+                        break;
             }
             break;
         default:
-                printChip8Error("Unknown Opcode. Skipping.");
-                pc += 2;
+            printChip8Error("Unknown Opcode. Skipping.");
+            pc += 2;
             break;
     }
 
@@ -411,7 +412,6 @@ void Chip8::runCycle()
 
 void Chip8::draw()
 {
-
     SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, 0xFF);
     SDL_RenderClear(renderer);
     SDL_SetRenderDrawColor(renderer, 0xFF, 0xFF, 0xFF, 0xFF);
