@@ -1,7 +1,7 @@
 #Chip8++
 *A Chip8 Emulator/Interpreter written in C++ using the SDL2 library.*
 
-![Space Invaders](https://raw.github.com/connorkuehl/Chip8/screenshots/space_invaders.gif)
+![Space Invaders](screenshots/space_invaders.gif)
 
 ####About This Project
 
