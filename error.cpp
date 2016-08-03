@@ -1,3 +1,11 @@
+/*
+ * Connor Kuehl
+ * connorkuehl95@gmail.com
+ *
+ * error.cpp contains the implementation for error-helper functions
+ * for the Chip8 interpreter. 
+ */
+
 #include "error.h"
 #include "Chip8.h"
 #include <iostream>

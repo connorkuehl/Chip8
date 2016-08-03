@@ -2,7 +2,20 @@
  * Connor Kuehl
  * connorkuehl95@gmail.com
  *
- * TODO Document this file
+ * This program is a Chip8 Emulator (though I think 'interpreter' is
+ * the more technically correct term based on what I've read. Using the
+ * Chip8 object, this program will load Chip8 programs and execute their
+ * instructions.
+ *
+ * Chip8.h contains the class definition for the Chip8 class. It also
+ * includes useful global constants and C pre processor macros to
+ * improve legibility of the dissection of Chip8 instructions. This
+ * header file also contains the HEX representation of the fontset
+ * used by the Chip8.
+ *
+ * I tried to keep this implementation of the Chip8 interpreter as close
+ * to the technical specifications in terms of stack size, register and 
+ * other variable sizes.
  */
 
 #ifndef CHIP8_H_
@@ -13,12 +26,12 @@
 #include <cstdint>
 #include <cstdlib>
 
-#define PROG_NAME  "Chip8"
 #define VX V[(opcode & 0x0F00) >> 8]
 #define VY V[(opcode & 0x00F0) >> 4]
 #define NNN (opcode & 0x0FFF)
 #define KK (opcode & 0x00FF)
 
+static const std::string&   PROG_NAME = "Chip8";
 static const int   START_PROG_MEM = 0x200;
 static const int   END_PROG_MEM   = 0xFFF;
 static const int   X_RES          = 64;
