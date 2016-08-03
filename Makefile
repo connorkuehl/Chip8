@@ -1,27 +1,29 @@
-CC = clang++
-CXXFLAGS= -std=c++11 -c
-LINKER = $(CC) -std=c++11
-LDFLAGS = -lSDL2
-OBJECTS = main.o Chip8.o error.o
-EXECUTABLE = chip8
+# Recommended settings per the GNU Make manual
+SHELL = /bin/sh
+.SUFFIXES:
+.SUFFIXES: .cpp .o
 
+# USER PREFERENCES -- feel free to change the compiler (i.e. g++)
+CC = clang++
+
+# REQUIRED BY PROJECT -- only change if you know what you're doing
+EXECUTABLE = chip8
+CFLAGS = -std=c++11 -g
+ALL_FLAGS = -I. $(CFLAGS)
+LDFLAGS = -lSDL2
+SOURCES = main.cpp Chip8.cpp error.cpp
+OBJECTS = $(SOURCES:.cpp=.o)
+
+# BUILD
 all: $(EXECUTABLE)
 
-debug: CXXFLAGS += -g -Wall
-debug: $(EXECUTABLE)
-
 $(EXECUTABLE): $(OBJECTS)
-	$(LINKER) $(OBJECTS) $(LDFLAGS) -o	$(EXECUTABLE)
+	$(CC) $(ALL_FLAGS) $(OBJECTS) -o $(EXECUTABLE) $(LDFLAGS) 
 
-main.o: main.cpp
-	$(CC) $(CXXFLAGS) $(LDFLAGS)	main.cpp
+%.o: %.cpp
+	$(CC) $(ALL_FLAGS) -c $< -o $@
 
-Chip8.o: Chip8.cpp Chip8.h
-	$(CC) $(CXXFLAGS) $(LDFLAGS)	Chip8.cpp
-
-error.o: error.cpp error.h
-	$(CC) $(CXXFLAGS) $(LDFLAGS)	error.cpp
-
+.PHONY: clean
 clean:
 	rm -f $(OBJECTS)
 	rm -f $(EXECUTABLE)
