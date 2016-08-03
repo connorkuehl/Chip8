@@ -24,7 +24,6 @@ $(EXECUTABLE): $(OBJECTS)
 	$(CC) $(ALL_FLAGS) $(BLD_DIR)*.o -o $(EXECUTABLE) $(LDFLAGS) 
 
 $(BLD_DIR)%.o: %.cpp
-	mkdir build
 	$(CC) $(ALL_FLAGS) -c $^ -o $@
 
 .PHONY: clean
