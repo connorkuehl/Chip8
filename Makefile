@@ -8,14 +8,14 @@ CC = clang++
 
 # REQUIRED BY PROJECT -- only change if you know what you're doing
 EXECUTABLE = chip8
-CFLAGS = -std=c++11 -g
-ALL_FLAGS = -I. $(CFLAGS)
-LDFLAGS = -lSDL2
-SOURCES = main.cpp Chip8.cpp error.cpp
-OBJECTS = $(SOURCES:%.cpp=$(BLD_DIR)%.o)
 SRC_DIR = ./src/
 BLD_DIR = ./build/
 VPATH = src:SRC_DIR
+CFLAGS = -std=c++11 -g
+ALL_FLAGS = -I$(SRC_DIR) $(CFLAGS)
+LDFLAGS = -lSDL2
+SOURCES = main.cpp Chip8.cpp error.cpp
+OBJECTS = $(SOURCES:%.cpp=$(BLD_DIR)%.o)
 
 # BUILD
 all: $(EXECUTABLE)
