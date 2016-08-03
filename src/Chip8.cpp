@@ -136,7 +136,6 @@ void Chip8::play()
         interact();
 
         lastUpdate = currentTime;
-        SDL_Delay(3);
     }
 }
 
@@ -485,6 +484,7 @@ void Chip8::draw()
     }
     SDL_RenderPresent(renderer);
     updatedPixels = false;
+    SDL_Delay(10);
 }
 
 /*
