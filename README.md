@@ -1,7 +1,7 @@
 #Chip8++
 *A Chip8 Emulator/Interpreter written in C++ using the SDL2 library.*
 
-![Space Invaders](screenshots/space_invaders.gif)
+![Space Invaders](screenshots/chip8prev.gif)
 
 ####Dependencies (Look here before you download!)
 - A C++ compiler (clang++, g++, minGW), the Makefile will default to clang.
