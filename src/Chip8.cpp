@@ -129,8 +129,11 @@ void Chip8::play()
         currentTime = SDL_GetTicks();
 
         // Only cycle 60 times per second
-        if (((currentTime - lastUpdate) / 1000) <= REFRESH_RATE)
+        if (currentTime - lastUpdate >= REFRESH_RATE)
             runCycle();
+        else
+            SDL_Delay(2);
+
         if (updatedPixels)
             draw();
         interact();
@@ -484,7 +487,7 @@ void Chip8::draw()
     }
     SDL_RenderPresent(renderer);
     updatedPixels = false;
-    SDL_Delay(10);
+    //SDL_Delay(5);
 }
 
 /*

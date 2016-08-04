@@ -37,7 +37,7 @@ static const int   END_PROG_MEM   = 0xFFF;
 static const int   X_RES          = 64;
 static const int   Y_RES          = 32;
 static const int   SCALE          = 10;
-static const float REFRESH_RATE   = 1.f/60.f;
+static const float REFRESH_RATE   = 1.f/10.f;
 
 static uint8_t chip8Font[80] =
 { 
