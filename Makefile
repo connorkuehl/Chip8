@@ -21,12 +21,12 @@ OBJECTS = $(SOURCES:%.cpp=$(BLD_DIR)%.o)
 all: $(EXECUTABLE)
 
 $(EXECUTABLE): $(OBJECTS)
-	$(CC) $(ALL_FLAGS) $(BLD_DIR)*.o -o $(EXECUTABLE) $(LDFLAGS) 
+	$(CC) $(ALL_FLAGS) $(OBJECTS) -o $(EXECUTABLE) $(LDFLAGS) 
 
 $(BLD_DIR)%.o: %.cpp
 	$(CC) $(ALL_FLAGS) -c $^ -o $@
 
 .PHONY: clean
 clean:
-	rm -f $(BLD_DIR)*.o
+	rm -f $(OBJECTS)
 	rm -f $(EXECUTABLE)
